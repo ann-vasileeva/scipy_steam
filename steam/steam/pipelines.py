@@ -18,7 +18,7 @@ class SteamPipeline:
         self.file.close()
 
     def process_item(self, item, spider):
-        if item["release_date"].split(".")[2] >= 2000:
+        if item["release_date"].split(",")[1] != "" and int(item["release_date"].split(",")[1]) >= 2000:
             line = json.dumps(ItemAdapter(item).asdict()) + '\n'
             self.file.write(line)
         return item

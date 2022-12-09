@@ -23,38 +23,34 @@ class SteamSpider(scrapy.Spider):
             yield scrapy.Request(url=res, callback=self.parse_product_page)
 
     def parse_product_page(self, response):
-        
 
         item = SteamItem()
 
         name = response.css("#appHubAppName::text").get()
-        category = response.css("div.blockbg") # Нужно ухх как почистить
-        reviews_cnt = response.css("span.responsive_hidden::text")[1].get()
-        overview = response.css("span.game_review_summary.positive::text").get()
-        release_date = response.css("div.date::text").get()  #19 Apr, 2019
-        tags = response.css("div.glance_tags.popular_tags")[0].get() ## каша, выудить нужное
-        discount = response.css("div.discount_final_price::text").get()
-        original_price = response.css("div.game_purchase_price.price::text").get()  #'\r\n\t\t\t\t\t\t\t435 pуб.\t\t\t\t\t\t'
-        available_platforms = response.css("div.sysreq_tabs").get()
-        '<div class="sysreq_tabs">\r\n\t\t\t\t\t\t\t\t\t<div class="sysreq_tab active" data-os="win">\r\n\t\t\t\t\t\tWindows\t\t\t\t\t</div>\r\n\t\t\t\t\t\t\t\t\t<div class="sysreq_tab " ' \
-        'data-os="mac">\r\n\t\t\t\t\t\tmacOS\t\t\t\t\t</div>\r\n\t\t\t\t\t\t\t\t\t<div class="sysreq_tab " data-os="linux">\r\n\t\t\t\t\t\tSteamOS + Linux\t\t\t\t\t</div>\r\n\t\t\t\t\t\t\t\t<div style="clear: left;"></div>\r\n\t\t\t</di'
+        category = response.xpath('//div[@class="blockbg"]/a[@href]/text()').extract()[1:]
+        reviews_cnt = response.xpath('//div[@class="user_reviews_summary_bar"]//span/text()').extract()[1]
+        overview = response.xpath('//div[@class="user_reviews_summary_bar"]//span/text()').extract()[0]
+        developer = response.xpath('//div[@id="developers_list"]//a/text()').extract()
+        release_date = response.css("div.date::text").get()
+        tags = response.xpath('//div[@class="glance_tags popular_tags"]//a/text()').extract()
+        discount = response.xpath('//div[@class="discount_final_price"]/text()').extract()
+        price = response.xpath('//div[@class="game_purchase_price price"]/text()').extract()
+        available_platforms = response.xpath(
+            '//div[contains(@class, "game_area_sys_req sysreq_content")]//@data-os').extract()
 
-        item['name'] = name
-        item['category'] = None
-        item['reviews_cnt'] = response.css("span.responsive_hidden::text")[1].get()
-
-        title = response.xpath('//h1/text()').extract()
-        category = response.xpath('//ol[contains(@class, SnowBreadcrumbs_SnowBreadcrumbs__list__1xzrg)]/li/a/text()').extract()
-        price = response.xpath('//div[contains(@class, snow-price_SnowPrice__secondPrice__18x8np)][1]/text()').extract()
-        sale_price = response.xpath('//div[contains(@class, snow-price_SnowPrice__mainM__18x8np)][1]/text()').extract()
-        delivery = response.xpath('//div[contains(@class, SnowProductDelivery_SnowProductDelivery__item__y5v67)[0]/span[1]/text()').extract()
-        rating = response.xpath('//p[contains(@class, SnowReviews_ProductRating__ratingAverage__17pz0)[0]/text()').extract()
-        item["title"] = ''.join(title).strip()
-        item["category"] = '/'.join(category).strip()
-        item["price"] = ''.join(price).strip()
-        item["sale_price"] = ''.join(sale_price).strip()
-        item["delivery"] = ''.join(delivery).strip()
-        item["rating"] = ''.join(rating).strip()
-
+        item['name'] = ''.join(name).strip()
+        item['category'] = '/'.join(category).strip()
+        item['reviews_cnt'] = ''.join(reviews_cnt).strip()
+        item['overview'] = ''.join(overview).strip()
+        item["developer"] = ''.join(developer).strip()
+        item['release_date'] = ''.join(release_date).strip()
+        for tag in tags:
+            tag = tag.strip()
+        item['tags'] = ','.join(tags).strip()
+        if discount:
+            item['price'] = ''.join(discount).strip()
+        else:
+            item['price'] = ''.join(price).strip()
+        item['available_platforms'] = ",".join(available_platforms).strip()
 
         yield item

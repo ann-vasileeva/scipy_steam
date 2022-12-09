@@ -12,8 +12,9 @@ class SteamItem(scrapy.Item):
     category = scrapy.Field()
     reviews_cnt = scrapy.Field()
     overview = scrapy.Field()
+    developer = scrapy.Field()
     release_date = scrapy.Field()
     tags = scrapy.Field()
     price = scrapy.Field()
-    available_platforms() = scrapy.Field()
+    available_platforms = scrapy.Field()
 
